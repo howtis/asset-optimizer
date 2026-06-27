@@ -19,7 +19,6 @@ repositories {
 
 dependencies {
     implementation gradleApi()
-    implementation localGroovy()
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -33,6 +32,54 @@ gradlePlugin {
         }
     }
 }
+
+def esbuildVersion = '0.25.0'
+def esbuildPlatforms = [
+    [npm: 'win32-x64', binary: 'package/esbuild.exe', resourceName: 'win32-x64/esbuild.exe'],
+    [npm: 'linux-x64', binary: 'package/bin/esbuild', resourceName: 'linux-x64/esbuild'],
+    [npm: 'darwin-x64', binary: 'package/bin/esbuild', resourceName: 'darwin-x64/esbuild'],
+    [npm: 'darwin-arm64', binary: 'package/bin/esbuild', resourceName: 'darwin-arm64/esbuild'],
+    [npm: 'linux-arm64', binary: 'package/bin/esbuild', resourceName: 'linux-arm64/esbuild'],
+]
+
+tasks.register('downloadEsbuildBinaries') {
+    def outputDir = layout.buildDirectory.dir('generated-resources/esbuild')
+    outputs.dir(outputDir)
+
+    doLast {
+        def dest = outputDir.get().asFile
+        dest.mkdirs()
+
+        esbuildPlatforms.each { p ->
+            def url = "https://registry.npmjs.org/@esbuild/${p.npm}/-/${p.npm}-${esbuildVersion}.tgz"
+            def tgzFile = new File(dest, "${p.npm}.tgz")
+
+            logger.lifecycle("Downloading esbuild ${p.npm}...")
+            new URL(url).openStream().withStream { input ->
+                tgzFile.withOutputStream { output ->
+                    output << input
+                }
+            }
+
+            def outputFile = new File(dest, p.resourceName)
+            outputFile.parentFile.mkdirs()
+            project.copy {
+                from project.tarTree(tgzFile)
+                include p.binary
+                into outputFile.parentFile
+                rename { outputFile.name }
+            }
+            if (!outputFile.exists()) {
+                throw new IOException("Binary '${p.binary}' not found in ${tgzFile.name}")
+            }
+            logger.lifecycle("Extracted esbuild ${p.resourceName}")
+            tgzFile.delete()
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir(tasks.named('downloadEsbuildBinaries').map { it.outputs.files.singleFile })
+tasks.named('processResources') { dependsOn('downloadEsbuildBinaries') }
 
 tasks.named('jar') {
     metaInf {

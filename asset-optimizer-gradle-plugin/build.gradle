@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'java-gradle-plugin'
 }
 
 group = 'io.github.howtis'
@@ -22,6 +23,15 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+gradlePlugin {
+    plugins {
+        assetOptimizer {
+            id = 'io.github.howtis.asset-optimizer'
+            implementationClass = 'io.github.howtis.assetoptimizer.AssetOptimizerPlugin'
+        }
+    }
 }
 
 tasks.named('jar') {

@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+group = 'io.github.howtis'
+version = project.findProperty('releaseVersion') ?: '1.0.0'
+
+java {
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.named('jar') {
+    metaInf {
+        from rootProject.file('../LICENSE')
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

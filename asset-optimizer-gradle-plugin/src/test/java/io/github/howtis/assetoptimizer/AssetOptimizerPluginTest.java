@@ -12,6 +12,7 @@ import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AssetOptimizerPluginTest {
@@ -48,7 +49,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         MinifyCssTask task = (MinifyCssTask) project.getTasks().getByName("minifyCss");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -58,7 +59,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         MinifyJsTask task = (MinifyJsTask) project.getTasks().getByName("minifyJs");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -86,7 +87,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         MinifyHtmlTask task = (MinifyHtmlTask) project.getTasks().getByName("minifyHtml");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -114,7 +115,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         OptimizeJpegTask task = (OptimizeJpegTask) project.getTasks().getByName("optimizeJpeg");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -124,7 +125,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         OptimizeSvgTask task = (OptimizeSvgTask) project.getTasks().getByName("optimizeSvg");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -134,7 +135,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         OptimizePngTask task = (OptimizePngTask) project.getTasks().getByName("optimizePng");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -153,7 +154,7 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         ConvertWebpTask task = (ConvertWebpTask) project.getTasks().getByName("convertWebp");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
         assertNotNull(task.getOutputDir().getOrNull());
     }
 
@@ -168,13 +169,13 @@ class AssetOptimizerPluginTest {
     }
 
     @Test
-    void extensionHasDefaultSourceDir() {
+    void extensionHasDefaultSourceDirs() {
         Project project = ProjectBuilder.builder().build();
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         AssetOptimizerExtension extension = project.getExtensions()
             .getByType(AssetOptimizerExtension.class);
-        assertNotNull(extension.getSourceDir().getOrNull());
+        assertFalse(extension.getSourceDirs().isEmpty());
     }
 
     @Test
@@ -189,17 +190,17 @@ class AssetOptimizerPluginTest {
     }
 
     @Test
-    void customSourceDirPropagatesToTasks() {
+    void customSourceDirsPropagatesToTasks() {
         Project project = ProjectBuilder.builder().build();
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         AssetOptimizerExtension extension = project.getExtensions()
             .getByType(AssetOptimizerExtension.class);
-        extension.getSourceDir().set(
+        extension.getSourceDirs().setFrom(
             project.getLayout().getProjectDirectory().dir("custom/static"));
 
         MinifyCssTask task = (MinifyCssTask) project.getTasks().getByName("minifyCss");
-        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getSourceDirs());
     }
 
     @Test

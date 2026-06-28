@@ -1,11 +1,13 @@
 package io.github.howtis.assetoptimizer.task;
 
+import io.github.howtis.assetoptimizer.Cache;
 import io.github.howtis.assetoptimizer.Processes;
 import io.github.howtis.assetoptimizer.webp.WebpBinary;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
@@ -17,9 +19,9 @@ import java.util.List;
 
 public abstract class ConvertWebpTask extends DefaultTask {
 
-    @InputDirectory
+    @InputFiles
     @SkipWhenEmpty
-    public abstract DirectoryProperty getSourceDir();
+    public abstract ConfigurableFileCollection getSourceDirs();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDir();
@@ -30,22 +32,27 @@ public abstract class ConvertWebpTask extends DefaultTask {
                 .toPath().resolve("caches").resolve("asset-optimizer");
         Path cwebp = new WebpBinary(cacheDir).ensureAvailable();
 
-        Path srcDir = getSourceDir().get().getAsFile().toPath();
         Path dstDir = getOutputDir().get().getAsFile().toPath();
         Files.createDirectories(dstDir);
 
-        FileTree imageFiles = getProject().fileTree(srcDir.toFile(), files ->
-            files.include("**/*.jpg", "**/*.jpeg", "**/*.png"));
-        imageFiles.forEach(file -> {
-            Path relative = srcDir.relativize(file.toPath());
-            String webpName = relative.toString().replaceFirst("\\.[^.]+$", ".webp");
-            Path output = dstDir.resolve(webpName);
-            try {
-                convertFile(cwebp, file.toPath(), output);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to convert " + file + " to WebP", e);
-            }
-        });
+        for (java.io.File srcDirFile : getSourceDirs().getFiles()) {
+            Path srcDir = srcDirFile.toPath();
+            FileTree imageFiles = getProject().fileTree(srcDir.toFile(), files ->
+                files.include("**/*.jpg", "**/*.jpeg", "**/*.png"));
+            imageFiles.forEach(file -> {
+                Path relative = srcDir.relativize(file.toPath());
+                String webpName = relative.toString().replaceFirst("\\.[^.]+$", ".webp");
+                Path output = dstDir.resolve(webpName);
+                try {
+                    if (Cache.shouldSkip(file.toPath(), output)) {
+                        return;
+                    }
+                    convertFile(cwebp, file.toPath(), output);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to convert " + file + " to WebP", e);
+                }
+            });
+        }
     }
 
     public static void convertFile(Path cwebp, Path input, Path output) throws IOException {

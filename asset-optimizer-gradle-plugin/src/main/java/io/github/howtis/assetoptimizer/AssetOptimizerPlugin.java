@@ -18,56 +18,56 @@ public class AssetOptimizerPlugin implements Plugin<Project> {
         AssetOptimizerExtension extension = project.getExtensions().create(
             "assetOptimizer", AssetOptimizerExtension.class);
 
-        extension.getSourceDir().convention(
+        extension.getSourceDirs().convention(
             project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
         extension.getOutputDir().convention(
             project.getLayout().getBuildDirectory().dir("asset-optimizer"));
 
         TaskProvider<MinifyCssTask> minifyCss = project.getTasks().register(
             "minifyCss", MinifyCssTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("css")));
             });
 
         TaskProvider<MinifyJsTask> minifyJs = project.getTasks().register(
             "minifyJs", MinifyJsTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("js")));
             });
 
         TaskProvider<MinifyHtmlTask> minifyHtml = project.getTasks().register(
             "minifyHtml", MinifyHtmlTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("html")));
             });
 
         TaskProvider<OptimizePngTask> optimizePng = project.getTasks().register(
             "optimizePng", OptimizePngTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("png")));
             });
 
         TaskProvider<OptimizeSvgTask> optimizeSvg = project.getTasks().register(
             "optimizeSvg", OptimizeSvgTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("svg")));
             });
 
         TaskProvider<OptimizeJpegTask> optimizeJpeg = project.getTasks().register(
             "optimizeJpeg", OptimizeJpegTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("jpeg")));
             });
 
         TaskProvider<ConvertWebpTask> convertWebp = project.getTasks().register(
             "convertWebp", ConvertWebpTask.class, task -> {
-                task.getSourceDir().convention(extension.getSourceDir());
+                task.getSourceDirs().convention(extension.getSourceDirs());
                 task.getOutputDir().set(
                     extension.getOutputDir().map(d -> d.dir("webp")));
             });

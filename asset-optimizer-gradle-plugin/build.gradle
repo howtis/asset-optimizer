@@ -35,6 +35,7 @@ gradlePlugin {
 
 def esbuildVersion = '0.25.0'
 def oxipngVersion = '10.1.1'
+def webpVersion = '1.5.0'
 def oxipngPlatforms = [
     [target: 'x86_64-pc-windows-msvc', ext: 'zip', binaryName: 'oxipng.exe', resourceName: 'win32-x64/oxipng.exe'],
     [target: 'x86_64-unknown-linux-gnu', ext: 'tar.gz', binaryName: 'oxipng', resourceName: 'linux-x64/oxipng'],
@@ -81,6 +82,58 @@ tasks.register('downloadEsbuildBinaries') {
             }
             logger.lifecycle("Extracted esbuild ${p.resourceName}")
             tgzFile.delete()
+        }
+    }
+}
+
+def webpPlatforms = [
+    [target: 'windows-x64', ext: 'zip', binaryName: 'cwebp.exe', binaryPath: "libwebp-${webpVersion}-windows-x64/bin/cwebp.exe", resourceName: 'win32-x64/cwebp.exe'],
+    [target: 'linux-x86-64', ext: 'tar.gz', binaryName: 'cwebp', binaryPath: "libwebp-${webpVersion}-linux-x86-64/bin/cwebp", resourceName: 'linux-x64/cwebp'],
+    [target: 'mac-x86-64', ext: 'tar.gz', binaryName: 'cwebp', binaryPath: "libwebp-${webpVersion}-mac-x86-64/bin/cwebp", resourceName: 'darwin-x64/cwebp'],
+    [target: 'mac-arm64', ext: 'tar.gz', binaryName: 'cwebp', binaryPath: "libwebp-${webpVersion}-mac-arm64/bin/cwebp", resourceName: 'darwin-arm64/cwebp'],
+]
+
+tasks.register('downloadWebpBinaries') {
+    def outputDir = layout.buildDirectory.dir('generated-resources/webp')
+    outputs.dir(outputDir)
+
+    doLast {
+        def dest = outputDir.get().asFile
+        dest.mkdirs()
+
+        webpPlatforms.each { p ->
+            def url = "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-${webpVersion}-${p.target}.${p.ext}"
+            def archiveFile = new File(dest, "libwebp-${p.target}.${p.ext}")
+
+            logger.lifecycle("Downloading cwebp ${p.target}...")
+            new URL(url).openStream().withStream { input ->
+                archiveFile.withOutputStream { output ->
+                    output << input
+                }
+            }
+
+            def outputFile = new File(dest, p.resourceName)
+            outputFile.parentFile.mkdirs()
+            if (p.ext == 'zip') {
+                project.copy {
+                    from project.zipTree(archiveFile)
+                    include p.binaryPath
+                    into outputFile.parentFile
+                    eachFile { fcd -> fcd.path = fcd.name }
+                }
+            } else {
+                project.copy {
+                    from project.tarTree(archiveFile)
+                    include p.binaryPath
+                    into outputFile.parentFile
+                    eachFile { fcd -> fcd.path = fcd.name }
+                }
+            }
+            if (!outputFile.exists()) {
+                throw new IOException("Binary '${p.binaryPath}' not found in ${archiveFile.name}")
+            }
+            logger.lifecycle("Extracted cwebp ${p.resourceName}")
+            archiveFile.delete()
         }
     }
 }
@@ -133,9 +186,11 @@ tasks.register('downloadOxipngBinaries') {
 
 sourceSets.main.resources.srcDir(tasks.named('downloadEsbuildBinaries').map { it.outputs.files.singleFile })
 sourceSets.main.resources.srcDir(tasks.named('downloadOxipngBinaries').map { it.outputs.files.singleFile })
+sourceSets.main.resources.srcDir(tasks.named('downloadWebpBinaries').map { it.outputs.files.singleFile })
 tasks.named('processResources') {
     dependsOn('downloadEsbuildBinaries')
     dependsOn('downloadOxipngBinaries')
+    dependsOn('downloadWebpBinaries')
 }
 
 tasks.named('jar') {

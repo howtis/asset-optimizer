@@ -1,5 +1,6 @@
 package io.github.howtis.assetoptimizer;
 
+import io.github.howtis.assetoptimizer.task.ConvertWebpTask;
 import io.github.howtis.assetoptimizer.task.MinifyCssTask;
 import io.github.howtis.assetoptimizer.task.MinifyHtmlTask;
 import io.github.howtis.assetoptimizer.task.MinifyJsTask;
@@ -64,6 +65,13 @@ public class AssetOptimizerPlugin implements Plugin<Project> {
                     extension.getOutputDir().map(d -> d.dir("jpeg")));
             });
 
+        TaskProvider<ConvertWebpTask> convertWebp = project.getTasks().register(
+            "convertWebp", ConvertWebpTask.class, task -> {
+                task.getSourceDir().convention(extension.getSourceDir());
+                task.getOutputDir().set(
+                    extension.getOutputDir().map(d -> d.dir("webp")));
+            });
+
         project.getTasks().matching(task -> task.getName().equals("processResources"))
             .all(processResources -> {
                 processResources.dependsOn(minifyCss);
@@ -72,6 +80,7 @@ public class AssetOptimizerPlugin implements Plugin<Project> {
                 processResources.dependsOn(optimizeJpeg);
                 processResources.dependsOn(optimizePng);
                 processResources.dependsOn(optimizeSvg);
+                processResources.dependsOn(convertWebp);
             });
     }
 }

@@ -1,5 +1,6 @@
 package io.github.howtis.assetoptimizer;
 
+import io.github.howtis.assetoptimizer.task.ConvertWebpTask;
 import io.github.howtis.assetoptimizer.task.MinifyCssTask;
 import io.github.howtis.assetoptimizer.task.MinifyHtmlTask;
 import io.github.howtis.assetoptimizer.task.MinifyJsTask;
@@ -133,6 +134,25 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         OptimizePngTask task = (OptimizePngTask) project.getTasks().getByName("optimizePng");
+        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getOutputDir().getOrNull());
+    }
+
+    @Test
+    void registersConvertWebpTask() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        ConvertWebpTask task = (ConvertWebpTask) project.getTasks().getByName("convertWebp");
+        assertNotNull(task);
+    }
+
+    @Test
+    void convertWebpTaskHasSourceAndOutputConfigured() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        ConvertWebpTask task = (ConvertWebpTask) project.getTasks().getByName("convertWebp");
         assertNotNull(task.getSourceDir().getOrNull());
         assertNotNull(task.getOutputDir().getOrNull());
     }

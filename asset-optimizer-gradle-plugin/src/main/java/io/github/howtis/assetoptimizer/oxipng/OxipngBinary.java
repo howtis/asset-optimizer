@@ -1,4 +1,4 @@
-package io.github.howtis.assetoptimizer.esbuild;
+package io.github.howtis.assetoptimizer.oxipng;
 
 import io.github.howtis.assetoptimizer.Processes;
 
@@ -6,16 +6,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public final class EsbuildBinary {
+public final class OxipngBinary {
 
-    private static final String ESBUILD_VERSION = "0.25.0";
+    private static final String OXIPNG_VERSION = "10.1.1";
 
     private final Path cacheDir;
-    private final Platform platform;
+    private final OxipngPlatform platform;
 
-    public EsbuildBinary(Path cacheDir) {
-        this.cacheDir = cacheDir.resolve("esbuild-" + ESBUILD_VERSION);
-        this.platform = Platform.detect();
+    public OxipngBinary(Path cacheDir) {
+        this.cacheDir = cacheDir.resolve("oxipng-" + OXIPNG_VERSION);
+        this.platform = OxipngPlatform.detect();
     }
 
     public Path ensureAvailable() throws IOException {
@@ -23,12 +23,12 @@ public final class EsbuildBinary {
         if (Files.isExecutable(binary)) {
             return binary;
         }
-        synchronized (EsbuildBinary.class) {
+        synchronized (OxipngBinary.class) {
             if (Files.isExecutable(binary)) {
                 return binary;
             }
             Files.createDirectories(binary.getParent());
-            Processes.extractBinary(getClass(), "/" + platform.resourcePath(), binary, "esbuild");
+            Processes.extractBinary(getClass(), "/" + platform.resourcePath(), binary, "oxipng");
         }
         return binary;
     }

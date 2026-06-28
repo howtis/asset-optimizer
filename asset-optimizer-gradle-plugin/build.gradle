@@ -34,6 +34,13 @@ gradlePlugin {
 }
 
 def esbuildVersion = '0.25.0'
+def oxipngVersion = '10.1.1'
+def oxipngPlatforms = [
+    [target: 'x86_64-pc-windows-msvc', ext: 'zip', binaryName: 'oxipng.exe', resourceName: 'win32-x64/oxipng.exe'],
+    [target: 'x86_64-unknown-linux-gnu', ext: 'tar.gz', binaryName: 'oxipng', resourceName: 'linux-x64/oxipng'],
+    [target: 'x86_64-apple-darwin', ext: 'tar.gz', binaryName: 'oxipng', resourceName: 'darwin-x64/oxipng'],
+    [target: 'aarch64-apple-darwin', ext: 'tar.gz', binaryName: 'oxipng', resourceName: 'darwin-arm64/oxipng'],
+]
 def esbuildPlatforms = [
     [npm: 'win32-x64', binary: 'package/esbuild.exe', resourceName: 'win32-x64/esbuild.exe'],
     [npm: 'linux-x64', binary: 'package/bin/esbuild', resourceName: 'linux-x64/esbuild'],
@@ -67,7 +74,7 @@ tasks.register('downloadEsbuildBinaries') {
                 from project.tarTree(tgzFile)
                 include p.binary
                 into outputFile.parentFile
-                rename { outputFile.name }
+                eachFile { fcd -> fcd.path = fcd.name }
             }
             if (!outputFile.exists()) {
                 throw new IOException("Binary '${p.binary}' not found in ${tgzFile.name}")
@@ -78,8 +85,58 @@ tasks.register('downloadEsbuildBinaries') {
     }
 }
 
+tasks.register('downloadOxipngBinaries') {
+    def outputDir = layout.buildDirectory.dir('generated-resources/oxipng')
+    outputs.dir(outputDir)
+
+    doLast {
+        def dest = outputDir.get().asFile
+        dest.mkdirs()
+
+        oxipngPlatforms.each { p ->
+            def url = "https://github.com/oxipng/oxipng/releases/download/v${oxipngVersion}/oxipng-${oxipngVersion}-${p.target}.${p.ext}"
+            def archiveFile = new File(dest, "oxipng-${p.target}.${p.ext}")
+
+            logger.lifecycle("Downloading oxipng ${p.target}...")
+            new URL(url).openStream().withStream { input ->
+                archiveFile.withOutputStream { output ->
+                    output << input
+                }
+            }
+
+            def outputFile = new File(dest, p.resourceName)
+            outputFile.parentFile.mkdirs()
+            def archiveBinaryPath = "oxipng-${oxipngVersion}-${p.target}/${p.binaryName}"
+            if (p.ext == 'zip') {
+                project.copy {
+                    from project.zipTree(archiveFile)
+                    include archiveBinaryPath
+                    into outputFile.parentFile
+                    eachFile { fcd -> fcd.path = fcd.name }
+                }
+            } else {
+                project.copy {
+                    from project.tarTree(archiveFile)
+                    include archiveBinaryPath
+                    into outputFile.parentFile
+                    eachFile { fcd -> fcd.path = fcd.name }
+                }
+            }
+            if (!outputFile.exists()) {
+                throw new IOException("Binary '${archiveBinaryPath}' not found in ${archiveFile.name}")
+            }
+            logger.lifecycle("Extracted oxipng ${p.resourceName}")
+            archiveFile.delete()
+        }
+    }
+}
+
 sourceSets.main.resources.srcDir(tasks.named('downloadEsbuildBinaries').map { it.outputs.files.singleFile })
-tasks.named('processResources') { dependsOn('downloadEsbuildBinaries') }
+sourceSets.main.resources.srcDir(tasks.named('downloadOxipngBinaries').map { it.outputs.files.singleFile })
+tasks.named('processResources') {
+    dependsOn('downloadEsbuildBinaries')
+    dependsOn('downloadOxipngBinaries')
+}
 
 tasks.named('jar') {
     metaInf {

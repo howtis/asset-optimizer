@@ -1,6 +1,7 @@
 package io.github.howtis.assetoptimizer;
 
 import io.github.howtis.assetoptimizer.task.MinifyCssTask;
+import io.github.howtis.assetoptimizer.task.MinifyHtmlTask;
 import io.github.howtis.assetoptimizer.task.MinifyJsTask;
 import io.github.howtis.assetoptimizer.task.OptimizePngTask;
 import org.gradle.api.Project;
@@ -64,6 +65,25 @@ class AssetOptimizerPluginTest {
 
         OptimizePngTask task = (OptimizePngTask) project.getTasks().getByName("optimizePng");
         assertNotNull(task);
+    }
+
+    @Test
+    void registersMinifyHtmlTask() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        MinifyHtmlTask task = (MinifyHtmlTask) project.getTasks().getByName("minifyHtml");
+        assertNotNull(task);
+    }
+
+    @Test
+    void minifyHtmlTaskHasSourceAndOutputConfigured() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        MinifyHtmlTask task = (MinifyHtmlTask) project.getTasks().getByName("minifyHtml");
+        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getOutputDir().getOrNull());
     }
 
     @Test

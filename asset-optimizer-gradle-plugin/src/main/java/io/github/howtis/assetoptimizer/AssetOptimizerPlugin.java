@@ -13,44 +13,47 @@ public class AssetOptimizerPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        AssetOptimizerExtension extension = project.getExtensions().create(
+            "assetOptimizer", AssetOptimizerExtension.class);
+
+        extension.getSourceDir().convention(
+            project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+        extension.getOutputDir().convention(
+            project.getLayout().getBuildDirectory().dir("asset-optimizer"));
+
         TaskProvider<MinifyCssTask> minifyCss = project.getTasks().register(
             "minifyCss", MinifyCssTask.class, task -> {
-                task.getSourceDir().set(
-                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getSourceDir().convention(extension.getSourceDir());
                 task.getOutputDir().set(
-                    project.getLayout().getBuildDirectory().dir("asset-optimizer/css"));
+                    extension.getOutputDir().map(d -> d.dir("css")));
             });
 
         TaskProvider<MinifyJsTask> minifyJs = project.getTasks().register(
             "minifyJs", MinifyJsTask.class, task -> {
-                task.getSourceDir().set(
-                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getSourceDir().convention(extension.getSourceDir());
                 task.getOutputDir().set(
-                    project.getLayout().getBuildDirectory().dir("asset-optimizer/js"));
+                    extension.getOutputDir().map(d -> d.dir("js")));
             });
 
         TaskProvider<MinifyHtmlTask> minifyHtml = project.getTasks().register(
             "minifyHtml", MinifyHtmlTask.class, task -> {
-                task.getSourceDir().set(
-                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getSourceDir().convention(extension.getSourceDir());
                 task.getOutputDir().set(
-                    project.getLayout().getBuildDirectory().dir("asset-optimizer/html"));
+                    extension.getOutputDir().map(d -> d.dir("html")));
             });
 
         TaskProvider<OptimizePngTask> optimizePng = project.getTasks().register(
             "optimizePng", OptimizePngTask.class, task -> {
-                task.getSourceDir().set(
-                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getSourceDir().convention(extension.getSourceDir());
                 task.getOutputDir().set(
-                    project.getLayout().getBuildDirectory().dir("asset-optimizer/png"));
+                    extension.getOutputDir().map(d -> d.dir("png")));
             });
 
         TaskProvider<OptimizeSvgTask> optimizeSvg = project.getTasks().register(
             "optimizeSvg", OptimizeSvgTask.class, task -> {
-                task.getSourceDir().set(
-                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getSourceDir().convention(extension.getSourceDir());
                 task.getOutputDir().set(
-                    project.getLayout().getBuildDirectory().dir("asset-optimizer/svg"));
+                    extension.getOutputDir().map(d -> d.dir("svg")));
             });
 
         project.getTasks().matching(task -> task.getName().equals("processResources"))

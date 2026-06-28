@@ -4,6 +4,7 @@ import io.github.howtis.assetoptimizer.task.MinifyCssTask;
 import io.github.howtis.assetoptimizer.task.MinifyHtmlTask;
 import io.github.howtis.assetoptimizer.task.MinifyJsTask;
 import io.github.howtis.assetoptimizer.task.OptimizePngTask;
+import io.github.howtis.assetoptimizer.task.OptimizeSvgTask;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,25 @@ class AssetOptimizerPluginTest {
         project.getPluginManager().apply("io.github.howtis.asset-optimizer");
 
         MinifyHtmlTask task = (MinifyHtmlTask) project.getTasks().getByName("minifyHtml");
+        assertNotNull(task.getSourceDir().getOrNull());
+        assertNotNull(task.getOutputDir().getOrNull());
+    }
+
+    @Test
+    void registersOptimizeSvgTask() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        OptimizeSvgTask task = (OptimizeSvgTask) project.getTasks().getByName("optimizeSvg");
+        assertNotNull(task);
+    }
+
+    @Test
+    void optimizeSvgTaskHasSourceAndOutputConfigured() {
+        Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("io.github.howtis.asset-optimizer");
+
+        OptimizeSvgTask task = (OptimizeSvgTask) project.getTasks().getByName("optimizeSvg");
         assertNotNull(task.getSourceDir().getOrNull());
         assertNotNull(task.getOutputDir().getOrNull());
     }

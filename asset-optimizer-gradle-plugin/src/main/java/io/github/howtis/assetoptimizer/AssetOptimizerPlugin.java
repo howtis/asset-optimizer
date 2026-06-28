@@ -4,6 +4,7 @@ import io.github.howtis.assetoptimizer.task.MinifyCssTask;
 import io.github.howtis.assetoptimizer.task.MinifyHtmlTask;
 import io.github.howtis.assetoptimizer.task.MinifyJsTask;
 import io.github.howtis.assetoptimizer.task.OptimizePngTask;
+import io.github.howtis.assetoptimizer.task.OptimizeSvgTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
@@ -44,12 +45,21 @@ public class AssetOptimizerPlugin implements Plugin<Project> {
                     project.getLayout().getBuildDirectory().dir("asset-optimizer/png"));
             });
 
+        TaskProvider<OptimizeSvgTask> optimizeSvg = project.getTasks().register(
+            "optimizeSvg", OptimizeSvgTask.class, task -> {
+                task.getSourceDir().set(
+                    project.getLayout().getProjectDirectory().dir("src/main/resources/static"));
+                task.getOutputDir().set(
+                    project.getLayout().getBuildDirectory().dir("asset-optimizer/svg"));
+            });
+
         project.getTasks().matching(task -> task.getName().equals("processResources"))
             .all(processResources -> {
                 processResources.dependsOn(minifyCss);
                 processResources.dependsOn(minifyHtml);
                 processResources.dependsOn(minifyJs);
                 processResources.dependsOn(optimizePng);
+                processResources.dependsOn(optimizeSvg);
             });
     }
 }

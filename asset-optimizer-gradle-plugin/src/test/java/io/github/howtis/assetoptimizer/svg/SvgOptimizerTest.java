@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SvgOptimizerTest {
 
@@ -64,5 +65,41 @@ class SvgOptimizerTest {
         String input = "<svg xmlns=\"http://www.w3.org/2000/svg\">\n  <!-- logo -->\n  <metadata><rdf/></metadata>\n  <g>\n    <rect/>\n  </g>\n  <g></g>\n</svg>";
         String result = optimizer.optimize(input);
         assertEquals("<svg xmlns=\"http://www.w3.org/2000/svg\"><g><rect/></g></svg>", result);
+    }
+
+    @Test
+    void handlesNestedEmptyGroups() throws IOException {
+        String input = "<svg><g><g></g></g><rect/></svg>";
+        String result = optimizer.optimize(input);
+        assertEquals("<svg><rect/></svg>", result);
+    }
+
+    @Test
+    void removesGroupWithOnlyWhitespace() throws IOException {
+        String input = "<svg><g>   </g><rect/></svg>";
+        String result = optimizer.optimize(input);
+        assertEquals("<svg><rect/></svg>", result);
+    }
+
+    @Test
+    void preservesGroupWithText() throws IOException {
+        String input = "<svg><g><text>label</text></g></svg>";
+        String result = optimizer.optimize(input);
+        assertEquals("<svg><g><text>label</text></g></svg>", result);
+    }
+
+    @Test
+    void handlesMultipleComments() throws IOException {
+        String input = "<svg><!-- a --><rect/><!-- b --><circle/><!-- c --></svg>";
+        String result = optimizer.optimize(input);
+        assertEquals("<svg><rect/><circle/></svg>", result);
+    }
+
+    @Test
+    void handlesCdataInSvg() throws IOException {
+        String input = "<svg><style><![CDATA[.cls { fill: red; }]]></style><rect/></svg>";
+        String result = optimizer.optimize(input);
+        assertTrue(result.contains(".cls"));
+        assertTrue(result.contains("<rect/>"));
     }
 }

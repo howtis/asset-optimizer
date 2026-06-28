@@ -12,6 +12,14 @@ public final class HtmlMinifier {
         "<(pre|textarea|script|style)\\b[^>]*>.*?</\\1>",
         Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
+    private static final Pattern TH_INLINE = Pattern.compile(
+        "<(\\w+)\\b[^>]*\\bth:inline\\b[^>]*>(.*?)</\\1>",
+        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern PROTOTYPE_COMMENT = Pattern.compile(
+        "<!--/\\*/(.*?)/\\*/-->",
+        Pattern.DOTALL);
+
     private static final Pattern COMMENT = Pattern.compile("<!--.*?-->", Pattern.DOTALL);
 
     private static final Pattern BETWEEN_TAGS = Pattern.compile(">\\s+<");
@@ -27,21 +35,34 @@ public final class HtmlMinifier {
 
     String minify(String html) {
         java.util.List<String> preserved = new java.util.ArrayList<>();
-        Matcher preserveMatcher = PRESERVE.matcher(html);
+        String result = html;
+
+        result = PROTOTYPE_COMMENT.matcher(result).replaceAll("<!-- $1 -->");
+
+        Matcher preserveMatcher = PRESERVE.matcher(result);
         StringBuilder sb = new StringBuilder();
         while (preserveMatcher.find()) {
             preserved.add(preserveMatcher.group());
             preserveMatcher.appendReplacement(sb, "%%PRESERVE_" + (preserved.size() - 1) + "%%");
         }
         preserveMatcher.appendTail(sb);
-        String result = sb.toString();
+        result = sb.toString();
+
+        Matcher thInlineMatcher = TH_INLINE.matcher(result);
+        sb = new StringBuilder();
+        while (thInlineMatcher.find()) {
+            preserved.add(thInlineMatcher.group());
+            thInlineMatcher.appendReplacement(sb, "%%PRESERVE_" + (preserved.size() - 1) + "%%");
+        }
+        thInlineMatcher.appendTail(sb);
+        result = sb.toString();
 
         result = COMMENT.matcher(result).replaceAll("");
         result = BETWEEN_TAGS.matcher(result).replaceAll("><");
         result = WHITESPACE.matcher(result).replaceAll(" ");
         result = result.trim();
 
-        for (int i = 0; i < preserved.size(); i++) {
+        for (int i = preserved.size() - 1; i >= 0; i--) {
             result = result.replace("%%PRESERVE_" + i + "%%", preserved.get(i));
         }
 

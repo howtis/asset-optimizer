@@ -63,4 +63,39 @@ class HtmlMinifierTest {
         String expected = "<html><head><style>\n    p { margin: 0; }\n  </style></head><body><div><p>Hello World</p><pre>\n      code\n    </pre></div></body></html>";
         assertEquals(expected, minifier.minify(input));
     }
+
+    @Test
+    void removesThymeleafParserComments() {
+        String input = "<div><!--/* parser comment */--><p>text</p></div>";
+        String expected = "<div><p>text</p></div>";
+        assertEquals(expected, minifier.minify(input));
+    }
+
+    @Test
+    void convertsThymeleafPrototypeComments() {
+        String input = "<div><!--/*/ prototype comment /*/--><p>text</p></div>";
+        String expected = "<div><p>text</p></div>";
+        assertEquals(expected, minifier.minify(input));
+    }
+
+    @Test
+    void preservesThInlineTextContent() {
+        String input = "<div th:inline=\"text\">\n  Hello   [[${name}]]\n</div>";
+        String expected = "<div th:inline=\"text\">\n  Hello   [[${name}]]\n</div>";
+        assertEquals(expected, minifier.minify(input));
+    }
+
+    @Test
+    void preservesInlineExpressions() {
+        String input = "<p>Hello [[${name}]]  world</p>";
+        String expected = "<p>Hello [[${name}]] world</p>";
+        assertEquals(expected, minifier.minify(input));
+    }
+
+    @Test
+    void handlesThymeleafMixedContent() {
+        String input = "<html>\n<head>\n  <!--/* parser */-->\n</head>\n<body>\n  <!--/*/ prototype /*/-->\n  <div th:inline=\"text\">\n    [[${greeting}]], [[${name}]]!\n  </div>\n  <p>Static  text</p>\n</body>\n</html>";
+        String expected = "<html><head></head><body><div th:inline=\"text\">\n    [[${greeting}]], [[${name}]]!\n  </div><p>Static text</p></body></html>";
+        assertEquals(expected, minifier.minify(input));
+    }
 }
